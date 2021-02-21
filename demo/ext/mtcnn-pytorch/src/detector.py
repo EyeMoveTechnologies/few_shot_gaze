@@ -4,6 +4,7 @@ from torch.autograd import Variable
 from .get_nets import PNet, RNet, ONet
 from .box_utils import nms, calibrate_box, get_image_boxes, convert_to_square
 from .first_stage import run_first_stage
+import time
 
 
 def detect_faces(image, min_face_size=20.0,
@@ -20,6 +21,7 @@ def detect_faces(image, min_face_size=20.0,
         two float numpy arrays of shapes [n_boxes, 4] and [n_boxes, 10],
         bounding boxes and facial landmarks.
     """
+    start_time = time.perf_counter()
 
     # LOAD MODELS
     pnet = PNet()
@@ -138,5 +140,8 @@ def detect_faces(image, min_face_size=20.0,
             keep = nms(bounding_boxes, nms_thresholds[2], mode='min')
             bounding_boxes = bounding_boxes[keep]
             landmarks = landmarks[keep]
+
+    end_time = time.perf_counter()
+    print('detect_faces took {0:.5f}s'.format(end_time - start_time))
 
     return bounding_boxes, landmarks

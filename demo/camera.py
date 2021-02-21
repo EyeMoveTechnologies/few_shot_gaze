@@ -48,6 +48,8 @@ def cam_calibrate(cam_idx, cap, cam_calib):
                     print("Calibrating camera...")
                     cv2.destroyAllWindows()
                     break
+            else:
+                print("No checkerboard detected")
 
     # compute calibration matrices
 

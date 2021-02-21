@@ -6,27 +6,33 @@
 # Code written by Shalini De Mello.
 # --------------------------------------------------------
 
-import gi.repository
-gi.require_version('Gdk', '3.0')
-from gi.repository import Gdk
+# import gi.repository
+# gi.require_version('Gdk', '3.0')
+# from gi.repository import Gdk
 import numpy as np
 
 class monitor:
 
     def __init__(self):
-        display = Gdk.Display.get_default()
-        screen = display.get_default_screen()
-        default_screen = screen.get_default()
-        num = default_screen.get_number()
+        # display = Gdk.Display.get_default()
+        # screen = display.get_default_screen()
+        # default_screen = screen.get_default()
+        # num = default_screen.get_number()
 
-        self.h_mm = default_screen.get_monitor_height_mm(num)
-        self.w_mm = default_screen.get_monitor_width_mm(num)
+        # self.h_mm = default_screen.get_monitor_height_mm(num)
+        # self.w_mm = default_screen.get_monitor_width_mm(num)
 
-        self.h_pixels = default_screen.get_height()
-        self.w_pixels = default_screen.get_width()
+        # self.h_pixels = default_screen.get_height()
+        # self.w_pixels = default_screen.get_width()
+
+        self.h_mm = 300
+        self.w_mm = 470
+
+        self.h_pixels = 1050
+        self.w_pixels = 1680
 
     def monitor_to_camera(self, x_pixel, y_pixel):
-
+        #OF: This lets us do a rough manual calibration!
         # assumes in-build laptop camera, located centered and 10 mm above display
         # update this function for you camera and monitor using: https://github.com/computer-vision/takahashi2012cvpr
         x_cam_mm = ((int(self.w_pixels/2) - x_pixel)/self.w_pixels) * self.w_mm

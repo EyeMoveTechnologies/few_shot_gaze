@@ -19,7 +19,15 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
+# snair_pattern_path = '/home/eyemove/fydp/few_shot_gaze/demo/pattern.png'
+
+# snair_img = cv2.imread(snair_pattern_path, 0)
+# print('Read image, showing imshow')
+# cv2.imshow('image', snair_img)
+# cv2.waitKey(0)
+
 from monitor import monitor
+
 from camera import cam_calibrate
 from person_calibration import collect_data, fine_tune
 from frame_processor import frame_processer
@@ -47,6 +55,7 @@ else:
     print("Calibrate camera once. Print pattern.png, paste on a clipboard, show to camera and capture non-blurry images in which points are detected well.")
     print("Press s to save frame, c to continue, q to quit")
     cam_calibrate(cam_idx, cam_cap, cam_calib)
+
 
 #################################
 # Load gaze network
@@ -104,14 +113,15 @@ gaze_network.load_state_dict(ted_weights)
 # Initialize monitor and frame processor
 mon = monitor()
 frame_processor = frame_processer(cam_calib)
-
+print('Initialized frame_processor')
 # collect person calibration data and fine-
 # tune gaze network
-subject = input('Enter subject name: ')
-data = collect_data(cam_cap, mon, calib_points=9, rand_points=4)
+# subject = input('Enter subject name: ')
+subject = 'jkjlkjl'
+# data = collect_data(cam_cap, mon, calib_points=9, rand_points=4)
 # adjust steps and lr for best results
 # To debug calibration, set show=True
-gaze_network = fine_tune(subject, data, frame_processor, mon, device, gaze_network, k, steps=1000, lr=1e-5, show=False)
+# gaze_network = fine_tune(subject, data, frame_processor, mon, device, gaze_network, k, steps=1000, lr=1e-5, show=False)
 
 #################################
 # Run on live webcam feed and

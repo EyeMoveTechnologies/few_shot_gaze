@@ -14,6 +14,7 @@ import pickle
 import sys
 import os
 import torch
+import time
 
 sys.path.append("ext/eth")
 from undistorter import Undistorter
@@ -63,9 +64,20 @@ class frame_processer:
             f = open('./%s_calib_target.pkl' % subject, 'rb')
             targets = pickle.load(f)
 
+        scale_percent = 50
+
         frames_read = 0
         ret, img = cap.read()
         while ret:
+            start_time = time.perf_counter()
+
+            # width = int(img.shape[1] * scale_percent/100)
+            # height = int(img.shape[0] * scale_percent/100)
+
+            # dsize = (width, height)
+            dsize = (224, 224)
+            img = cv2.resize(img, dsize)
+
             img = self.undistorter.apply(img)
             if por_available:
                 g_t = targets[frames_read]
@@ -74,7 +86,13 @@ class frame_processer:
             # detect face
             face_location = face.detect(img,  scale=0.25, use_max='SIZE')
 
+            end_time = time.perf_counter()
+            print('Face detection took {0:.5f}s'.format(end_time - start_time))
+
             if len(face_location) > 0:
+
+                start_time = time.perf_counter()
+
                 # use kalman filter to smooth bounding box position
                 # assume work with complex numbers:
                 output_tracked = self.kalman_filters[0].update(face_location[0] + 1j * face_location[1])
@@ -94,10 +112,14 @@ class frame_processer:
                 camera_parameters = np.asarray([fx, fy, cx, cy])
                 rvec, tvec = self.head_pose_estimator.fit_func(pts, camera_parameters)
 
+                end_time = time.perf_counter()
+                print('Kalman Filter + Head pose took {0:.5f}s'.format(end_time - start_time))
+
                 ######### GAZE PART #########
 
                 # create normalized eye patch and gaze and head pose value,
                 # if the ground truth point of regard is given
+                start_time = time.perf_counter()
                 head_pose = (rvec, tvec)
                 por = None
                 if por_available:
@@ -197,8 +219,11 @@ class frame_processer:
                     data['R_gaze_a'].append(R_gaze_a)
                     data['R_head_a'].append(R_head_a)
 
-                if show:
+                end_time = time.perf_counter()
+                print('Gaze part took {0:.5f}s'.format(end_time - start_time))
 
+                if show:
+                    start_time = time.perf_counter()
                     # compute eye gaze and point of regard
                     for k, v in input_dict.items():
                         input_dict[k] = torch.FloatTensor(v).to(device).detach()
@@ -244,10 +269,15 @@ class frame_processer:
                     self.head_pose_estimator.drawPose(img, rvec, tvec, self.cam_calib['mtx'], np.zeros((1, 4)))
                     cv2.imshow('image', img)
 
+                    end_time = time.perf_counter()
+                    print('Show took {0:.5f}s'.format(end_time - start_time))
+
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         cv2.destroyAllWindows()
                         cap.release()
                         break
+            else:
+                print('No face detected')
 
             # read the next frame
             ret, img = cap.read()

@@ -81,9 +81,12 @@ def collect_data(cap, mon, calib_points=9, rand_points=5):
     global THREAD_RUNNING
     global frames
 
+    print("Collecting data for person calibration!")
+    # print("test")
     cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+    # print("Created namedWindow")
     cv2.setWindowProperty("image", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-
+    # print("Set window property")
     calib_data = {'frames': [], 'g_t': []}
 
     i = 0
@@ -95,6 +98,7 @@ def collect_data(cap, mon, calib_points=9, rand_points=5):
         th = threading.Thread(target=grab_img, args=(cap,))
         th.start()
         direction = random.choice(directions)
+        print("Creating image: {}".format(direction))
         img, g_t = create_image(mon, direction, i, (0, 0, 0), grid=True, total=calib_points)
         cv2.imshow('image', img)
         key_press = cv2.waitKey(0)
@@ -141,6 +145,8 @@ def collect_data(cap, mon, calib_points=9, rand_points=5):
 
 
 def fine_tune(subject, data, frame_processor, mon, device, gaze_network, k, steps=1000, lr=1e-4, show=False):
+
+    print("Fine tuning for person calibration!")
 
     # collect person calibration data
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
