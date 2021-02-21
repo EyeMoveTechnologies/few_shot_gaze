@@ -19,13 +19,6 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
-# snair_pattern_path = '/home/eyemove/fydp/few_shot_gaze/demo/pattern.png'
-
-# snair_img = cv2.imread(snair_pattern_path, 0)
-# print('Read image, showing imshow')
-# cv2.imshow('image', snair_img)
-# cv2.waitKey(0)
-
 from monitor import monitor
 
 from camera import cam_calibrate

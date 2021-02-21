@@ -13,14 +13,6 @@ from os import path
 
 from camera import cam_calibrate
 
-print(cv2.getBuildInformation())
-snair_pattern_path = '/home/eyemove/fydp/few_shot_gaze/demo/pattern.png'
-
-snair_img = cv2.imread(snair_pattern_path, 0)
-print('Read image, showing imshow')
-cv2.imshow('image', snair_img)
-cv2.waitKey(0)
-
 #################################
 # Start camera
 #################################
