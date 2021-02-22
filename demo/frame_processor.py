@@ -197,7 +197,9 @@ class frame_processer:
                     # during calibration
                     gaze_n_vector = self.pitchyaw_to_vector(g_n)
                     gaze_n_forward = -gaze_n_vector
+                    print("Gaze vector (fwd): {}".format(gaze_n_forward))
                     g_cam_forward = inverse_M * gaze_n_forward
+                    print("Gaze cam fwd: {}".format(g_cam_forward))
 
                     # compute the POR on z=0 plane
                     d = -gaze_cam_origin[2] / g_cam_forward[2]
