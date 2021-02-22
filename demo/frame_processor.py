@@ -55,6 +55,49 @@ class frame_processer:
         self.landmarks_detector = landmarks()
         self.head_pose_estimator = PnPHeadPoseEstimator()
 
+    def preprocess_image(self, image):
+        ycrcb = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
+        ycrcb[:, :, 0] = cv2.equalizeHist(ycrcb[:, :, 0])
+        image = cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2RGB)
+        # cv2.imshow('processed patch', image)
+
+        image = np.transpose(image, [2, 0, 1])  # CxHxW
+        image = 2.0 * image / 255.0 - 1
+        return image
+
+
+
+    # Functions to calculate relative rotation matrices for gaze dir. and head pose
+    def R_x(self, theta):
+        sin_ = np.sin(theta)
+        cos_ = np.cos(theta)
+        return np.array([
+            [1., 0., 0.],
+            [0., cos_, -sin_],
+            [0., sin_, cos_]
+        ]).astype(np.float32)
+
+    def R_y(self, phi):
+        sin_ = np.sin(phi)
+        cos_ = np.cos(phi)
+        return np.array([
+            [cos_, 0., sin_],
+            [0., 1., 0.],
+            [-sin_, 0., cos_]
+        ]).astype(np.float32)
+
+    def calculate_rotation_matrix(self, e):
+        return np.matmul(self.R_y(e[1]), self.R_x(e[0]))
+
+    def pitchyaw_to_vector(self, pitchyaw):
+
+        vector = np.zeros((3, 1))
+        vector[0, 0] = np.cos(pitchyaw[0]) * np.sin(pitchyaw[1])
+        vector[1, 0] = np.sin(pitchyaw[0])
+        vector[2, 0] = np.cos(pitchyaw[0]) * np.cos(pitchyaw[1])
+        return vector
+
+
 
     def process(self, subject, cap, mon, device, gaze_network, por_available=False, show=False):
 
@@ -138,61 +181,21 @@ class frame_processer:
                 [patch, h_n, g_n, inverse_M, gaze_cam_origin, gaze_cam_target] = normalize(entry, head_pose)
                 # cv2.imshow('raw patch', patch)
 
-                def preprocess_image(image):
-                    ycrcb = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
-                    ycrcb[:, :, 0] = cv2.equalizeHist(ycrcb[:, :, 0])
-                    image = cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2RGB)
-                    # cv2.imshow('processed patch', image)
-
-                    image = np.transpose(image, [2, 0, 1])  # CxHxW
-                    image = 2.0 * image / 255.0 - 1
-                    return image
-
                 # estimate the PoR using the gaze network
-                processed_patch = preprocess_image(patch)
+                processed_patch = self.preprocess_image(patch)
                 processed_patch = processed_patch[np.newaxis, :, :, :]
-
-                # Functions to calculate relative rotation matrices for gaze dir. and head pose
-                def R_x(theta):
-                    sin_ = np.sin(theta)
-                    cos_ = np.cos(theta)
-                    return np.array([
-                        [1., 0., 0.],
-                        [0., cos_, -sin_],
-                        [0., sin_, cos_]
-                    ]).astype(np.float32)
-
-                def R_y(phi):
-                    sin_ = np.sin(phi)
-                    cos_ = np.cos(phi)
-                    return np.array([
-                        [cos_, 0., sin_],
-                        [0., 1., 0.],
-                        [-sin_, 0., cos_]
-                    ]).astype(np.float32)
-
-                def calculate_rotation_matrix(e):
-                    return np.matmul(R_y(e[1]), R_x(e[0]))
-
-                def pitchyaw_to_vector(pitchyaw):
-
-                    vector = np.zeros((3, 1))
-                    vector[0, 0] = np.cos(pitchyaw[0]) * np.sin(pitchyaw[1])
-                    vector[1, 0] = np.sin(pitchyaw[0])
-                    vector[2, 0] = np.cos(pitchyaw[0]) * np.cos(pitchyaw[1])
-                    return vector
 
                 # compute the ground truth POR if the
                 # ground truth is available
-                R_head_a = calculate_rotation_matrix(h_n)
+                R_head_a = self.calculate_rotation_matrix(h_n)
                 R_gaze_a = np.zeros((1, 3, 3))
                 if type(g_n) is np.ndarray:
-                    R_gaze_a = calculate_rotation_matrix(g_n)
+                    R_gaze_a = self.calculate_rotation_matrix(g_n)
 
                     # verify that g_n can be transformed back
                     # to the screen's pixel location shown
                     # during calibration
-                    gaze_n_vector = pitchyaw_to_vector(g_n)
+                    gaze_n_vector = self.pitchyaw_to_vector(g_n)
                     gaze_n_forward = -gaze_n_vector
                     g_cam_forward = inverse_M * gaze_n_forward
 
